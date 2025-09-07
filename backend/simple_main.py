@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -17,10 +18,19 @@ class MessageGenerationResponse(BaseModel):
     message: str
     success: bool
 
-# CORS middleware configuration
+# CORS middleware configuration - Railway deployment friendly
+allowed_origins = [
+    "http://localhost:8080", 
+    "http://localhost:8081", 
+    "http://localhost:8084",
+    "https://*.vercel.app",  # Vercel domains
+    "https://*.netlify.app", # Netlify domains
+    "*"  # Allow all for development
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080", "http://localhost:8081", "http://localhost:8084", "*"],  # Vue dev server
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -166,4 +176,5 @@ async def generate_message(request: MessageGenerationRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)

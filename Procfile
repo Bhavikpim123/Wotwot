@@ -1,0 +1,1 @@
+web: cd backend && python -m uvicorn wati.main:app --host 0.0.0.0 --port $PORT
