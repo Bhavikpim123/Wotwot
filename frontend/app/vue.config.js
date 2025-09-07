@@ -1,6 +1,10 @@
 const webpack = require('webpack');
 
 module.exports = {
+  publicPath: process.env.NODE_ENV === 'production' ? '/' : '/',
+  outputDir: 'dist',
+  assetsDir: 'static',
+  
   configureWebpack: {
     plugins: [
       new webpack.DefinePlugin({
@@ -8,8 +12,19 @@ module.exports = {
         // define other feature flags here if needed
       }),
     ],
-    devtool: 'source-map'  // better debugging
+    devtool: process.env.NODE_ENV === 'development' ? 'source-map' : false
   },
+  
+  // Production optimizations
+  chainWebpack: config => {
+    if (process.env.NODE_ENV === 'production') {
+      config.optimization.minimizer('terser').tap(args => {
+        args[0].terserOptions.compress.drop_console = true;
+        return args;
+      });
+    }
+  },
+  
   devServer: {
     allowedHosts: 'all',  // Disable host checking
     proxy: {
