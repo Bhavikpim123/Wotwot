@@ -1,12 +1,12 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
-from .database import database
-from .routes import user, broadcast, contacts, auth, woocommerce, integration, wallet,analytics
-from .services import dramatiq_router
-from . import oauth2
-from wati.models.ChatBox import Last_Conversation
-from .models import ChatBox
+from database import database
+from routes import user, broadcast, contacts, auth, woocommerce, integration, wallet,analytics
+from services import dramatiq_router
+import oauth2
+from models.ChatBox import Last_Conversation
+from models import ChatBox
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta

@@ -8,19 +8,27 @@ module.exports = {
         // define other feature flags here if needed
       }),
     ],
+    devtool: 'source-map'  // better debugging
   },
   devServer: {
     allowedHosts: 'all',  // Disable host checking
     proxy: {
       '/api': {
-        target: process.env.VUE_APP_API_URL || 'http://localhost:8000', // Load from .env
+        target: process.env.VUE_APP_API_URL || 'http://localhost:8004', // Load from .env
         changeOrigin: true,
         secure: false,
+        logLevel: 'debug'
       },
     },
-    // Ensure WebSocket uses 'wss://'
     client: {
-      webSocketURL: 'wss://5543-2405-201-3004-d09d-e838-3470-27b1-6b78.ngrok-free.app.ngrok.io/ws', // Keep unchanged
+      webSocketURL: 'auto://0.0.0.0:0/ws',
+      overlay: false,   // disable overlay completely
+      logging: 'info'
     },
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+      'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization'
+    }
   },
 };

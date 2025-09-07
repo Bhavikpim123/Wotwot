@@ -88,9 +88,9 @@
         <p class="mt-4 text-center text-sm">
           Already have an account?
           <a
-            href=""
+            href="#"
             class="text-[#075e54] font-semibold mb-4"
-            @click="redirectLogin"
+            @click.prevent="redirectLogin"
             >Login</a
           >
         </p>
@@ -101,8 +101,13 @@
 
 <script>
 import zxcvbn from "zxcvbn";
+import { useToast } from 'vue-toastification';
 
 export default {
+  setup() {
+    const toast = useToast();
+    return { toast };
+  },
   data() {
     return {
       apiUrl: process.env.VUE_APP_API_URL,
@@ -129,10 +134,14 @@ export default {
     },
   },
   mounted() {
+    // Load Cloudflare Turnstile script with error handling
     const script = document.createElement("script");
     script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
     script.async = true;
     script.defer = true;
+    script.onerror = () => {
+      console.warn('Failed to load Cloudflare Turnstile script');
+    };
     document.head.appendChild(script);
   },
   methods: {
@@ -141,7 +150,7 @@ export default {
         'input[name="cf-turnstile-response"]'
       )?.value;
       if (!token) {
-        alert("Please complete the CAPTCHA.");
+        this.toast.error("Please complete the CAPTCHA.");
         return;
       }
 
@@ -153,7 +162,7 @@ export default {
       };
 
       if (!formData.username || !formData.email || !formData.password) {
-        alert("Please fill in all required fields.");
+        this.toast.error("Please fill in all required fields.");
         return;
       }
 
@@ -167,14 +176,14 @@ export default {
         .then((response) => response.json())
         .then((data) => {
           if (data.success) {
-            alert("Account created successfully!");
+            this.toast.success("Account created successfully!");
             document
               .querySelectorAll("input")
               .forEach((input) => (input.value = ""));
           } else if (data.detail) {
-            alert(data.detail);
+            this.toast.error(data.detail);
           } else {
-            alert("Failed to create account. Please try again.");
+            this.toast.error("Failed to create account. Please try again.");
           }
         })
         .catch((error) => console.error(error));

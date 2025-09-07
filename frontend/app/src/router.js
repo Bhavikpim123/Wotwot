@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import BroadCast1 from "./components/broadcast/broadcast1.vue";
 import BroadCast2 from "./components/broadcast/broadcast2.vue";
 import BroadCast3 from "./components/broadcast/broadcast3.vue";
+import MessageGenerator from "./components/broadcast/MessageGenerator.vue";
 import ContActs1 from "./components/contacts/contacts1.vue";
 import ContActs2 from "./components/contacts/contacts2.vue";
 import AppIntegration from "./components/integration/integration.vue";
@@ -16,9 +17,6 @@ import CostAnalytics from "./components/PurchaseHistory/CostDashboard.vue";
 import Analytics from "./components/analytics/Analytics.vue";
 
 import TermsAndPrivacy from "./views/TermsAndPrivacy.vue";
-import { useToast } from "vue-toastification";
-
-const toast = useToast();
 
 const routes = [
   // Public routes
@@ -54,6 +52,11 @@ const routes = [
         path: "/broadcast/broadcast1",
         component: BroadCast1,
         name: "Broadcast1",
+      },
+      {
+        path: "/broadcast/message-generator",
+        component: MessageGenerator,
+        name: "MessageGenerator",
       },
       {
         path: "/broadcast/broadcast2",
@@ -98,8 +101,6 @@ router.beforeEach((to, from, next) => {
   if (to.matched.some((record) => record.meta.requiresAuth)) {
     if (!token) {
       // No token = not logged in
-      
-      toast.error("Session expired. Please log in again.");
       return next("/");
     }
 
@@ -110,13 +111,11 @@ router.beforeEach((to, from, next) => {
       if (payload.exp < now) {
         // Token expired
         localStorage.removeItem("token");
-        toast.error("Session expired. Please log in again.");
         return next("/");
       }
     } catch (error) {
       // Invalid token format or parsing error
       localStorage.removeItem("token");
-      ("Invalid session. Please log in again.");
       return next("/");
     }
   }

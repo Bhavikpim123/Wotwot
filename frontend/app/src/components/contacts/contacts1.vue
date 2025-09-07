@@ -299,9 +299,12 @@ export default {
   async mounted() {
     await this.fetchContactList();
 
-
+    // Load Lord Icon script with error handling
     const script = document.createElement('script');
     script.src = "https://cdn.lordicon.com/lordicon.js";
+    script.onerror = () => {
+      console.warn('Failed to load Lord Icon script');
+    };
     document.body.appendChild(script);
   },
   name: "ContActs1",

@@ -504,11 +504,14 @@ export default {
     await this.fetchapiKey();
     await this.fetchIntegrationList();
     await this.checkIntegration();
+    
+    // Load Lord Icon script with error handling
     const script = document.createElement('script');
     script.src = "https://cdn.lordicon.com/lordicon.js";
+    script.onerror = () => {
+      console.warn('Failed to load Lord Icon script');
+    };
     document.body.appendChild(script);
-
-
 
     // Fetch contacts when the component is mounted
   },

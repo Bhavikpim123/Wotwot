@@ -22,7 +22,7 @@
               border-radius: 4px;
             "
           />
-          <img :scr="profile.profile_picture_url" />
+          <img :src="profile.profile_picture_url" />
 
           <h3 class="block mb-2 font-bold">Profile Picture</h3>
         </div>
@@ -261,21 +261,29 @@ export default {
 
     // Initialize the Facebook SDK
     window.fbAsyncInit = () => {
-      FB.init({
-        appId: "2621821927998797", // Replace with your App ID
-        autoLogAppEvents: true,
-        xfbml: true,
-        version: "v21.0",
-      });
+      if (typeof FB !== 'undefined') {
+        FB.init({
+          appId: "2621821927998797", // Replace with your App ID
+          autoLogAppEvents: true,
+          xfbml: true,
+          version: "v21.0",
+        });
+      }
     };
 
-    // Dynamically load the Facebook SDK
-    const script = document.createElement("script");
-    script.src = "https://connect.facebook.net/en_US/sdk.js";
-    script.async = true;
-    script.defer = true;
-    script.crossOrigin = "anonymous";
-    document.body.appendChild(script);
+    // Dynamically load the Facebook SDK with error handling
+    if (!document.getElementById('facebook-jssdk')) {
+      const script = document.createElement("script");
+      script.id = 'facebook-jssdk';
+      script.src = "https://connect.facebook.net/en_US/sdk.js";
+      script.async = true;
+      script.defer = true;
+      script.crossOrigin = "anonymous";
+      script.onerror = () => {
+        console.warn('Failed to load Facebook SDK');
+      };
+      document.body.appendChild(script);
+    }
 
     // Set up an event listener for messages from Facebook
     window.addEventListener("message", (event) => {
@@ -323,16 +331,21 @@ export default {
     },
 
     launchWhatsAppSignup() {
-      FB.login(this.fbLoginCallback, {
-        config_id: "951833230236631", // Replace with your configuration ID
-        response_type: "code", // Must be 'code' for System User access token
-        override_default_response_type: true,
-        extras: {
-          setup: {},
-          featureType: "",
-          sessionInfoVersion: "2",
-        },
-      });
+      if (typeof FB !== 'undefined' && FB.login) {
+        FB.login(this.fbLoginCallback, {
+          config_id: "951833230236631", // Replace with your configuration ID
+          response_type: "code", // Must be 'code' for System User access token
+          override_default_response_type: true,
+          extras: {
+            setup: {},
+            featureType: "",
+            sessionInfoVersion: "2",
+          },
+        });
+      } else {
+        console.error('Facebook SDK not loaded');
+        alert('Facebook SDK is not available. Please refresh the page and try again.');
+      }
     },
 
     loadFacebookSDK() {
@@ -351,13 +364,15 @@ export default {
 
     initializeFacebookSDK() {
       window.fbAsyncInit = () => {
-        FB.init({
-          appId: "2621821927998797", // Replace with your actual Facebook app ID
-          cookie: true,
-          xfbml: true,
-          version: "v20.0",
-        });
-        this.renderFacebookButton();
+        if (typeof FB !== 'undefined') {
+          FB.init({
+            appId: "2621821927998797", // Replace with your actual Facebook app ID
+            cookie: true,
+            xfbml: true,
+            version: "v20.0",
+          });
+          this.renderFacebookButton();
+        }
       };
     },
     async fetchProfile() {

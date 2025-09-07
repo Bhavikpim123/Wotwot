@@ -68,7 +68,7 @@
 
       <p class="mt-4 text-center text-sm">
         Already have an account?
-        <a href="" class="text-[#075e54] font-semibold mb-4" @click="redirectLogin">Login</a>
+        <a href="#" class="text-[#075e54] font-semibold mb-4" @click.prevent="redirectLogin">Login</a>
       </p>
     </div>
   </div>
@@ -81,6 +81,10 @@
 import { useToast } from 'vue-toastification';
 
 export default {
+  setup() {
+    const toast = useToast();
+    return { toast };
+  },
 
   data() {
     return {
@@ -93,24 +97,8 @@ export default {
   },
 
   mounted() {
-    // Initialize the Facebook SDK
-    window.fbAsyncInit = () => {
-      FB.init({
-        appId: "2621821927998797", // Replace with your App ID
-        autoLogAppEvents: true,
-        xfbml: true,
-        version: "v21.0",
-      });
-    };
-
-    // Dynamically load the Facebook SDK
-    const script = document.createElement("script");
-    script.src = "https://connect.facebook.net/en_US/sdk.js";
-    script.async = true;
-    script.defer = true;
-    script.crossOrigin = "anonymous";
-    document.body.appendChild(script);
-
+    this.loadFacebookSDK();
+    
     // Set up an event listener for messages from Facebook
     window.addEventListener("message", (event) => {
       if (
@@ -159,19 +147,24 @@ export default {
     },
 
     launchWhatsAppSignup() {
-      FB.login(
-        this.fbLoginCallback,
-        {
-          config_id: "951833230236631", // Replace with your configuration ID
-          response_type: "code", // Must be 'code' for System User access token
-          override_default_response_type: true,
-          extras: {
-            setup: {},
-            featureType: "",
-            sessionInfoVersion: "2",
-          },
-        }
-      );
+      if (typeof FB !== 'undefined' && FB.login) {
+        FB.login(
+          this.fbLoginCallback,
+          {
+            config_id: "951833230236631", // Replace with your configuration ID
+            response_type: "code", // Must be 'code' for System User access token
+            override_default_response_type: true,
+            extras: {
+              setup: {},
+              featureType: "",
+              sessionInfoVersion: "2",
+            },
+          }
+        );
+      } else {
+        console.error('Facebook SDK not loaded');
+        this.toast.error('Facebook SDK is not available. Please refresh the page and try again.');
+      }
     },
 
     loadFacebookSDK() {
@@ -182,6 +175,9 @@ export default {
         script.async = true;
         script.defer = true;
         script.onload = this.initializeFacebookSDK; // Ensure SDK is initialized once loaded
+        script.onerror = () => {
+          console.warn('Failed to load Facebook SDK');
+        };
         document.body.appendChild(script);
       } else {
         this.initializeFacebookSDK(); // SDK is already loaded
@@ -190,19 +186,21 @@ export default {
 
     initializeFacebookSDK() {
       window.fbAsyncInit = () => {
-        FB.init({
-          appId: '2621821927998797',  // Replace with your actual Facebook app ID
-          cookie: true,
-          xfbml: true,
-          version: 'v20.0',
-        });
-        this.renderFacebookButton();
+        if (typeof FB !== 'undefined') {
+          FB.init({
+            appId: '2621821927998797',  // Replace with your actual Facebook app ID
+            cookie: true,
+            xfbml: true,
+            version: 'v20.0',
+          });
+          this.renderFacebookButton();
+        }
       };
     },
 
     loginWithFacebook() {
       // Ensure the FB object is available
-      if (window.FB) {
+      if (window.FB && typeof window.FB.login === 'function') {
         window.FB.login(response => {
           if (response.authResponse) {
             console.log('User logged in:', response.authResponse);
@@ -213,38 +211,56 @@ export default {
         }, { scope: 'email' });
       } else {
         console.error('Facebook SDK not loaded.');
+        this.toast.error('Facebook SDK is not available. Please refresh the page and try again.');
       }
     },
 
     renderFacebookButton() {
       // Render the button manually after the SDK has loaded
-      FB.XFBML.parse(document.getElementById('fb-login-btn'));
-      console.log("run")
+      if (typeof FB !== 'undefined' && FB.XFBML) {
+        FB.XFBML.parse(document.getElementById('fb-login-btn'));
+        console.log("Facebook button rendered");
+      } else {
+        console.warn('Facebook SDK XFBML not available');
+      }
     },
 
     checkLoginState() {
-      FB.getLoginStatus((response) => {
-        if (response.status === 'connected') {
-          // User is logged in and authenticated
-          console.log('User is logged in and authenticated:', response);
-          this.getUserInfo(); // Call a method to fetch user info
-        } else if (response.status === 'not_authorized') {
-          // User is logged into Facebook but has not authenticated your app
-          console.log('User is logged into Facebook but not authenticated your app.');
-        } else {
-          // User is not logged into Facebook
-          console.log('User is not logged into Facebook.');
-        }
-      });
+      if (typeof FB !== 'undefined' && FB.getLoginStatus) {
+        FB.getLoginStatus((response) => {
+          if (response.status === 'connected') {
+            // User is logged in and authenticated
+            console.log('User is logged in and authenticated:', response);
+            this.getUserInfo(); // Call a method to fetch user info
+          } else if (response.status === 'not_authorized') {
+            // User is logged into Facebook but has not authenticated your app
+            console.log('User is logged into Facebook but not authenticated your app.');
+          } else {
+            // User is not logged into Facebook
+            console.log('User is not logged into Facebook.');
+          }
+        });
+      } else {
+        console.warn('Facebook SDK getLoginStatus not available');
+      }
     },
     fetchUserDetails() {
-      window.FB.api('/me', { fields: 'id,name,email' }, userDetails => {
-        console.log('User details:', userDetails);
-      });
+      if (window.FB && typeof window.FB.api === 'function') {
+        window.FB.api('/me', { fields: 'id,name,email' }, userDetails => {
+          console.log('User details:', userDetails);
+        });
+      } else {
+        console.warn('Facebook SDK API not available');
+      }
     },
 
     handleSubmit() {
-      const toast = useToast();
+      // Check if API URL is configured
+      if (!this.apiUrl) {
+        this.toast.error('API URL is not configured. Please check your environment settings.');
+        return;
+      }
+      
       // Get the form data
       const formData = {
         username: document.getElementById('username').value,
@@ -258,7 +274,7 @@ export default {
       // Check for required fields
       if (!formData.username || !formData.email || !formData.password || !formData.WABAID || !formData.PAccessToken || !formData.Phone_id) {
         
-        toast.error('Please fill in all required fields.');
+        this.toast.error('Please fill in all required fields.');
         
         return;
       }
@@ -275,22 +291,21 @@ export default {
         .then(data => {
           if (data.success) {
             // console.log(response)
-            toast.success('Account created successfully!');
+            this.toast.success('Account created successfully!');
             
             // Clear the form fields
             document.querySelectorAll('input').forEach(input => input.value = '');
           } else if (data.detail) {
              // Show the error message from the API
-            toast.error(data.detail);
+            this.toast.error(data.detail);
           } else {
-            toast.error('Failed to create account. Please try again.');
+            this.toast.error('Failed to create account. Please try again.');
             
           }
         })
         .catch(error => console.error(error));
     },
     redirectLogin() {
-
       this.$router.push('/');
     },
 

@@ -108,6 +108,11 @@
           class="block p-3 text-gray-600 rounded-lg ">
           <i class="bi bi-broadcast mr-2"></i>Broadcast Messages
         </a>
+        <a href="#" @click.prevent="navigate('/broadcast/message-generator')"
+          :class="{ 'text-green-800 font-semibold': isActive('/broadcast/message-generator'), 'hover:bg-gray-200 hover:font-semibold': !isActive('/broadcast/message-generator') }"
+          class="block p-3 text-gray-600 rounded-lg ">
+          <i class="bi bi-lightbulb mr-2"></i>AI Message Generator
+        </a>
         <a href="#" @click.prevent="navigate('/broadcast/broadcast1')"
           :class="{ 'text-green-800 font-semibold': isActive('/broadcast/broadcast1'), 'hover:bg-gray-200 hover:font-semibold': !isActive('/broadcast/broadcast1') }"
           class="block p-3 text-gray-600 rounded-lg ">
@@ -327,21 +332,29 @@ export default {
 
     // Initialize the Facebook SDK
     window.fbAsyncInit = () => {
-      FB.init({
-        appId: "2621821927998797", // Replace with your App ID
-        autoLogAppEvents: true,
-        xfbml: true,
-        version: "v21.0",
-      });
+      if (typeof FB !== 'undefined') {
+        FB.init({
+          appId: "2621821927998797", // Replace with your App ID
+          autoLogAppEvents: true,
+          xfbml: true,
+          version: "v21.0",
+        });
+      }
     };
 
-    // Dynamically load the Facebook SDK
-    const script = document.createElement("script");
-    script.src = "https://connect.facebook.net/en_US/sdk.js";
-    script.async = true;
-    script.defer = true;
-    script.crossOrigin = "anonymous";
-    document.body.appendChild(script);
+    // Dynamically load the Facebook SDK with error handling
+    if (!document.getElementById('facebook-jssdk')) {
+      const script = document.createElement("script");
+      script.id = 'facebook-jssdk';
+      script.src = "https://connect.facebook.net/en_US/sdk.js";
+      script.async = true;
+      script.defer = true;
+      script.crossOrigin = "anonymous";
+      script.onerror = () => {
+        console.warn('Failed to load Facebook SDK');
+      };
+      document.body.appendChild(script);
+    }
 
     // Set up an event listener for messages from Facebook
     window.addEventListener("message", (event) => {
